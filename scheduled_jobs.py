@@ -146,7 +146,7 @@ def evaluate_cryptos(end_date):
 
         db.update_interval_scores(interval_scores)
 
-        logging.info(f"{len(cryptos)} evaluated using evaluators: {", ".join(evaluator_names)}.")
+        logging.info(f"{len(cryptos)} evaluated using evaluators: {', '.join(evaluator_names)}.")
 
     except:
         tb = traceback.format_exc()
@@ -266,7 +266,7 @@ def main():
     daily_jobs_start = base_start + days_1 - mins_2
     weekly_jobs_start = base_start + days_7 - mins_5
 
-    logging.info(f"beginning scheduled jobs. hourly_tasks_start={hourly_tasks_start}, add_new_start={add_new_start}, update_all_start{update_all_start}")
+    logging.info(f"beginning scheduled jobs. hourly_jobs_start={hourly_jobs_start}, daily_jobs_start={daily_jobs_start}, weekly_jobs_start{weekly_jobs_start}")
 
     scheduler = BlockingScheduler(timezone=pytz.utc)
     scheduler.add_job(run_hourly_jobs, "interval", hours=1, start_date=hourly_jobs_start)
@@ -305,5 +305,5 @@ def test():
 
 
 if __name__ == "__main__":
-    # main()
-    test()
+    main()
+    # test()

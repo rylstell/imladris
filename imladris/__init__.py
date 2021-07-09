@@ -6,7 +6,7 @@ from imladris.twitter import TwitterApi
 from imladris.twilio import TwilioApi
 
 
-Config = ImladrisConfig("../imladris_config.json")
+Config = ImladrisConfig("imladris_config.json")
 
 db = ImladrisDatabase(
     Config.DATABASE_HOST,
