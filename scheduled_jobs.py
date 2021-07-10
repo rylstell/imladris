@@ -15,7 +15,7 @@ from imladris.utilities import datetime_from_rfc3339
 
 
 def prep_intervals_for_eval(intervals, evaluators):
- 
+
 	logging.info("preping intervals for eval")
 
 	eval_scores_dict = dict(zip([e.name for e in evaluators], [None] * len(evaluators)))
@@ -63,59 +63,72 @@ def prep_intervals_for_eval(intervals, evaluators):
 
 def add_crypto_intervals(start_datetime):
 
-	logging.info("adding crypto intervals")
+    logging.info("adding crypto intervals")
 
-	try:
+    try:
 
-		tickers = nom_api.tickers(interval="1h")
+        tickers = nom_api.tickers(interval="1h")
 		# pickler.dump(tickers, "nom_tickers.pickle")
 		# tickers = pickler.load("nom_tickers.pickle")
 
-		cryptos = db.get_mapping("nomics_id", ["crypto_id", "twitter_username, twitter_following"])
+        if tickers is None:
+            raise Exception("tickers not recevied. returning.")
 
-		is_valid_crypto = lambda crypto: crypto[1]["twitter_following"]
-		cryptos = dict(filter(is_valid_crypto, cryptos.items()))
+        cryptos = db.get_mapping("nomics_id", ["crypto_id", "twitter_username, twitter_following"])
 
-		twitter_friends = twit_api.get_users([crypto["twitter_username"] for crypto in cryptos.values()])
-		# pickler.dump(twitter_friends, "twitter_friends.pickle")
-		# twitter_friends = pickler.load("twitter_friends.pickle")
+        is_valid_crypto = lambda crypto: crypto[1]["twitter_following"]
+        cryptos = dict(filter(is_valid_crypto, cryptos.items()))
 
-		is_valid_ticker = lambda ticker: ticker["id"] in cryptos and "1h" in ticker
-		tickers = list(filter(is_valid_ticker, tickers))
+        twitter_friends = twit_api.get_users([crypto["twitter_username"] for crypto in cryptos.values()])
+        # pickler.dump(twitter_friends, "twitter_friends.pickle")
+        # twitter_friends = pickler.load("twitter_friends.pickle")
 
-		follower_counts = {}
-		for friend in twitter_friends:
-			follower_counts[friend.screen_name.lower()] = friend.followers_count
+        is_valid_ticker = lambda ticker: ticker["id"] in cryptos and "1h" in ticker
+        tickers = list(filter(is_valid_ticker, tickers))
 
-		timestamp_buffer_10min = timedelta(minutes=10)
+        follower_counts = {}
+        for friend in twitter_friends:
+            follower_counts[friend.screen_name.lower()] = friend.followers_count
 
-		intervals = []
-		for ticker in tickers:
+        timestamp_buffer_10min = timedelta(minutes=10)
 
-			crypto = cryptos[ticker["id"]]
+        interval_count = db.get_int_value("interval_count")
 
-			timestamp = datetime_from_rfc3339(ticker["price_timestamp"])
-			if start_datetime - timestamp > timestamp_buffer_10min:
-				continue
+        intervals = []
+        for ticker in tickers:
 
-			intervals.append({
-				"crypto_id": crypto["crypto_id"],
-				"price": ticker["price"],
-				"volume": ticker["1h"]["volume"],
-				"circulating_supply": ticker["circulating_supply"] if "circulating_supply" in ticker else None,
-				"twitter_followers": follower_counts[crypto["twitter_username"].lower()],
-				"timestamp": timestamp
-			})
+            crypto = cryptos[ticker["id"]]
 
-		db.add_intervals(intervals)
+            timestamp = datetime_from_rfc3339(ticker["price_timestamp"])
+            if start_datetime - timestamp > timestamp_buffer_10min:
+                continue
 
-		interval_count = db.get_int_value("interval_count") - 1
-		logging.info(f"{len(intervals)} intervals added. interval count is {interval_count}.")
+            twitter_username = crypto["twitter_username"].lower()
+            if twitter_username not in follower_counts:
+                continue
 
-	except:
-		tb = traceback.format_exc()
-		logging.warning(f"error when adding crypto intervals.\n{tb}")
-		twilio_api.send_text_to_admin("error in add_crypto_intervals")
+            intervals.append({
+                "crypto_id": crypto["crypto_id"],
+                "price": ticker["price"],
+                "volume": ticker["1h"]["volume"],
+                "circulating_supply": ticker["circulating_supply"] if "circulating_supply" in ticker else None,
+                "twitter_followers": follower_counts[twitter_username],
+                "interval_count": interval_count,
+                "timestamp": timestamp
+            })
+
+        db.add_intervals(intervals)
+        db.update_int_value("interval_count", interval_count + 1)
+
+        logging.info(f"{len(intervals)} intervals added. interval count is {interval_count}.")
+
+        return True
+
+    except:
+    	tb = traceback.format_exc()
+    	logging.warning(f"error when adding crypto intervals.\n{tb}")
+    	twilio_api.send_text_to_admin("error in add_crypto_intervals")
+        return False
 
 
 
@@ -166,7 +179,7 @@ def evaluate_cryptos(end_date):
 
 
 def add_new_cryptos():
-	
+
 	logging.info("adding new cryptos")
 
 	try:
@@ -236,8 +249,8 @@ def update_all_cryptos():
 def run_hourly_jobs():
 	Config.load("imladris_config.json")
 	utcnow = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
-	add_crypto_intervals(utcnow)
-	if Config.RUN_EVALUATION:
+	success = add_crypto_intervals(utcnow)
+	if success and Config.RUN_EVALUATION:
 		evaluate_cryptos(utcnow)
 
 
@@ -246,7 +259,8 @@ def run_daily_jobs():
 
 
 def run_weekly_jobs():
-	update_all_cryptos()
+    if Config.UPDATE_ALL_CRYPTOS:
+	       update_all_cryptos()
 
 
 

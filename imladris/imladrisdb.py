@@ -143,9 +143,8 @@ INSERT INTO Crypto (
 
     def add_intervals(self, intervals):
         query = '''
-INSERT INTO Interval_1hr (interval_id, crypto_id, price, volume, circulating_supply, twitter_followers, timestamp)
-VALUES (DEFAULT, (%s), (%s), (%s), (%s), (%s), (%s));'''
-        interval_count = self.get_int_value("interval_count")
+INSERT INTO Interval_1hr (interval_id, crypto_id, price, volume, circulating_supply, twitter_followers, interval_count, timestamp)
+VALUES (DEFAULT, (%s), (%s), (%s), (%s), (%s), (%s), (%s));'''
         with self.open_connection() as con:
             cur = con.cursor()
             for interval in intervals:
@@ -155,12 +154,11 @@ VALUES (DEFAULT, (%s), (%s), (%s), (%s), (%s), (%s));'''
                     interval["volume"],
                     interval["circulating_supply"],
                     interval["twitter_followers"],
+                    interval["interval_count"],
                     interval["timestamp"]
                 ))
             con.commit()
-            cur.close()
-        self.update_int_value("interval_count", interval_count + 1)
-        
+            cur.close()        
 
 
     def update_int_value(self, name, value):
