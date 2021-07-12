@@ -67,6 +67,8 @@ def add_crypto_intervals(start_datetime):
 
     try:
 
+        interval_count = db.get_int_value("interval_count")
+
         tickers = nom_api.tickers(interval="1h")
 		# pickler.dump(tickers, "nom_tickers.pickle")
 		# tickers = pickler.load("nom_tickers.pickle")
@@ -76,32 +78,34 @@ def add_crypto_intervals(start_datetime):
 
         cryptos = db.get_mapping("nomics_id", ["crypto_id", "twitter_username, twitter_following"])
 
-        is_valid_crypto = lambda crypto: crypto[1]["twitter_following"]
+        timestamp_buffer_10min = timedelta(minutes=10)
+
+		def is_valid_ticker(ticker):
+			timestamp = datetime_from_rfc3339(ticker["price_timestamp"])
+			valid_timestamp = start_datetime - timestamp <= timestamp_buffer_10min
+			return valid_timestamp and "1h" in ticker and ticker["id"] in cryptos
+
+        tickers = list(filter(is_valid_ticker, tickers))
+
+		ticker_ids = set([ticker["id"] for ticker in tickers])
+
+		def is_valid_crypto(crypto):
+			return crypto[1]["twitter_following"] and crypto[0] in ticker_ids
+
         cryptos = dict(filter(is_valid_crypto, cryptos.items()))
 
         twitter_friends = twit_api.get_users([crypto["twitter_username"] for crypto in cryptos.values()])
         # pickler.dump(twitter_friends, "twitter_friends.pickle")
         # twitter_friends = pickler.load("twitter_friends.pickle")
 
-        is_valid_ticker = lambda ticker: ticker["id"] in cryptos and "1h" in ticker
-        tickers = list(filter(is_valid_ticker, tickers))
-
         follower_counts = {}
         for friend in twitter_friends:
             follower_counts[friend.screen_name.lower()] = friend.followers_count
-
-        timestamp_buffer_10min = timedelta(minutes=10)
-
-        interval_count = db.get_int_value("interval_count")
 
         intervals = []
         for ticker in tickers:
 
             crypto = cryptos[ticker["id"]]
-
-            timestamp = datetime_from_rfc3339(ticker["price_timestamp"])
-            if start_datetime - timestamp > timestamp_buffer_10min:
-                continue
 
             twitter_username = crypto["twitter_username"].lower()
             if twitter_username not in follower_counts:
@@ -125,6 +129,7 @@ def add_crypto_intervals(start_datetime):
         return True
 
     except:
+		db.update_int_value("interval_count", interval_count + 1)
 		tb = traceback.format_exc()
 		logging.warning(f"error when adding crypto intervals.\n{tb}")
 		twilio_api.send_text_to_admin("error in add_crypto_intervals")
