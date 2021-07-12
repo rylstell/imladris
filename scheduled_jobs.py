@@ -125,10 +125,10 @@ def add_crypto_intervals(start_datetime):
         return True
 
     except:
-    	tb = traceback.format_exc()
-    	logging.warning(f"error when adding crypto intervals.\n{tb}")
-    	twilio_api.send_text_to_admin("error in add_crypto_intervals")
-        return False
+		tb = traceback.format_exc()
+		logging.warning(f"error when adding crypto intervals.\n{tb}")
+		twilio_api.send_text_to_admin("error in add_crypto_intervals")
+		return False
 
 
 
@@ -187,7 +187,7 @@ def add_new_cryptos():
 		api_cmc_ids = [crypto["id"] for crypto in cmc_api.mapping()]
 		db_cmc_ids = db.get_cryptos(fields=["cmc_id"])
 
-		new_ids = set(api_cmc_ids) - set(db_cmc_ids)
+		new_ids = list(set(api_cmc_ids) - set(db_cmc_ids))
 
 		new_cmc_meta = cmc_api.metadata(new_ids)
 
