@@ -83,20 +83,22 @@ def add_crypto_intervals(start_datetime):
 		def is_valid_ticker(ticker):
 			timestamp = datetime_from_rfc3339(ticker["price_timestamp"])
 			valid_timestamp = start_datetime - timestamp <= timestamp_buffer_10min
-			return valid_timestamp and "1h" in ticker and ticker["id"] in cryptos
+			return valid_timestamp and "1h" in ticker and ticker["id"] in cryptos and cryptos[ticker["id"]]["twitter_following"]
 
         tickers = list(filter(is_valid_ticker, tickers))
 
 		ticker_ids = set([ticker["id"] for ticker in tickers])
 
 		def is_valid_crypto(crypto):
-			return crypto[1]["twitter_following"] and crypto[0] in ticker_ids
+			return crypto[0] in ticker_ids
 
         cryptos = dict(filter(is_valid_crypto, cryptos.items()))
 
         twitter_friends = twit_api.get_users([crypto["twitter_username"] for crypto in cryptos.values()])
         # pickler.dump(twitter_friends, "twitter_friends.pickle")
         # twitter_friends = pickler.load("twitter_friends.pickle")
+
+		logging.info(f"{len(twitter_friends)} TWITTER FRIENDS RETRIEVED")
 
         follower_counts = {}
         for friend in twitter_friends:
