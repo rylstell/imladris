@@ -276,9 +276,9 @@ def main():
 
     log_filename = str(master_start.replace(microsecond=0))
     logging.basicConfig(
-        filename=f"log/{log_filename}.log",
-        level=logging.DEBUG,
-        format='%(levelname)s: %(asctime)s      %(message)s'
+        filename = f"log/{log_filename}.log",
+        level = logging.DEBUG,
+        format = "%(levelname)s  %(name)s  %(asctime)s:  %(message)s"
     )
     logging.getLogger("requests").setLevel(logging.INFO)
     logging.getLogger("urllib3").setLevel(logging.INFO)
