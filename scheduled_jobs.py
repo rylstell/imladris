@@ -120,7 +120,7 @@ def add_crypto_intervals(start_datetime):
                 "circulating_supply": ticker["circulating_supply"] if "circulating_supply" in ticker else None,
                 "twitter_followers": follower_counts[twitter_username],
                 "interval_count": interval_count,
-                "timestamp": timestamp
+                "timestamp": datetime_from_rfc3339(ticker["price_timestamp"])
             })
 
         db.add_intervals(intervals)
