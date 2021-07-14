@@ -144,7 +144,7 @@ def add_crypto_intervals(start_datetime):
 
 
 
-def evaluate_cryptos(end_date):
+def evaluate_cryptos():
 
     logging.info("evaluating cryptos")
 
@@ -153,10 +153,12 @@ def evaluate_cryptos(end_date):
         evaluators = [E3434()]
         evaluator_names = [e.name for e in evaluators]
 
-        days_14 = timedelta(days=14)
-        start_date = end_date - days_14
+        max_interval_count = max([e.get_intervals_needed() for e in evaluators])
 
-        intervals = db.get_intervals(start_date, end_date)
+        end_interval_count = db.get_int_value("interval_count") - 1
+        start_interval_count = end_interval_count - max_interval_count
+
+        intervals = db.get_intervals(start_interval_count, end_interval_count)
 
         cryptos = prep_intervals_for_eval(intervals, evaluators)
 
@@ -265,7 +267,7 @@ def run_hourly_jobs():
     utcnow = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
     success = add_crypto_intervals(utcnow)
     if success and Config.RUN_EVALUATION:
-        evaluate_cryptos(utcnow)
+        evaluate_cryptos()
 
 
 def run_daily_jobs():

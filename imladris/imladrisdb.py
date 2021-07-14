@@ -83,14 +83,14 @@ OR
         return mapping
 
 
-    def get_intervals(self, start_date, end_date):
+    def get_intervals(self, start_interval_count, end_interval_count):
         query = '''
 SELECT * FROM Interval_1hr
-WHERE timestamp BETWEEN (%s) and (%s)
-ORDER BY timestamp DESC;'''
+WHERE interval_count >= (%s) AND interval_count <= (%s)
+ORDER BY interval_count DESC;'''
         with self.open_connection() as con:
             cur = con.cursor(dictionary=True)
-            cur.execute(query, (start_date, end_date))
+            cur.execute(query, (start_interval_count, end_interval_count))
             intervals = cur.fetchall()
             cur.close()
             return intervals
@@ -158,7 +158,7 @@ VALUES (DEFAULT, (%s), (%s), (%s), (%s), (%s), (%s), (%s));'''
                     interval["timestamp"]
                 ))
             con.commit()
-            cur.close()        
+            cur.close()
 
 
     def update_int_value(self, name, value):
