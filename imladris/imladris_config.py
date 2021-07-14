@@ -27,4 +27,5 @@ class ImladrisConfig:
         self.DATABASE_PASS = config.get("DATABASE_PASS")
         self.DATABASE_NAME = config.get("DATABASE_NAME")
         self.RUN_EVALUATION = config.get("RUN_EVALUATION")
-        self.UPDATE_ALL_CRYPTOS = config.get("UPDATE_ALL_CRYPTOS")
+        self.RUN_ADD_NEW_CRYPTOS = config.get("RUN_ADD_NEW_CRYPTOS")
+        self.RUN_UPDATE_ALL_CRYPTOS = config.get("RUN_UPDATE_ALL_CRYPTOS")

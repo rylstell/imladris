@@ -95,7 +95,7 @@ def add_crypto_intervals(start_datetime):
         cryptos = dict(filter(is_valid_crypto, cryptos.items()))
 
         logging.info(f"{len(tickers)} valid tickers. {len(cryptos)} valid cryptos")
-g
+
         twitter_friends = twit_api.get_users([crypto["twitter_username"] for crypto in cryptos.values()])
 
         logging.info(f"{len(twitter_friends)} friends retrieved")
@@ -201,24 +201,31 @@ def add_new_cryptos():
         nomics_ids = set([crypto["id"] for crypto in nom_api.metadata()])
 
         with_nomics_id = 0
+        twitter_following = 0
+        nom_id_twit_follow = 0
 
         for crypto in new_cmc_meta:
 
-            if crypto["twitter_username"]:
-                try:
-                    twit_api.create_friendship(crypto["twitter_username"])
-                    crypto["twitter_following"] = True
-                except:
-                    crypto["twitter_following"] = False
+            try:
+                if not crypto["twitter_username"]: raise
+                twit_api.create_friendship(crypto["twitter_username"])
+                crypto["twitter_following"] = True
+                twitter_following += 1
+            except:
+                crypto["twitter_following"] = False
 
             if crypto["symbol"] in nomics_ids:
-                with_nomics_id += 1
                 crypto["nomics_id"] = crypto["symbol"]
-            else: crypto["nomics_id"] = None
+                with_nomics_id += 1
+            else:
+                crypto["nomics_id"] = None
+
+            if crypto["twitter_following"] and crypto["nomics_id"] is not None:
+                nom_id_twit_follow += 1
 
         db.add_cmc_cryptos(new_cmc_meta)
 
-        logging.info(f"cryptos added. {len(new_cmc_meta)} total. {with_nomics_id} with nomics_id.")
+        logging.info(f"cryptos added. {len(new_cmc_meta)} total. {with_nomics_id} nomics_id. {twitter_following} twitter_following. {nom_id_twit_follow} nomics_id and twitter_following")
 
     except:
         tb = traceback.format_exc()
@@ -262,11 +269,12 @@ def run_hourly_jobs():
 
 
 def run_daily_jobs():
-    add_new_cryptos()
+    if Config.RUN_ADD_NEW_CRYPTOS:
+        add_new_cryptos()
 
 
 def run_weekly_jobs():
-    if Config.UPDATE_ALL_CRYPTOS:
+    if Config.RUN_UPDATE_ALL_CRYPTOS:
         update_all_cryptos()
 
 
