@@ -72,7 +72,9 @@ def add_crypto_intervals(start_datetime):
         tickers = nom_api.tickers(interval="1h")
 
         if tickers is None:
-            raise Exception("tickers not recevied. returning.")
+            raise Exception("tickers not retrieved")
+
+        logging.info(f"{len(tickers)} tickers retrieved")
 
         cryptos = db.get_mapping("nomics_id", ["crypto_id", "twitter_username, twitter_following"])
 
@@ -92,7 +94,11 @@ def add_crypto_intervals(start_datetime):
 
         cryptos = dict(filter(is_valid_crypto, cryptos.items()))
 
+        logging.info(f"{len(tickers)} valid tickers. {len(cryptos)} valid cryptos")
+g
         twitter_friends = twit_api.get_users([crypto["twitter_username"] for crypto in cryptos.values()])
+
+        logging.info(f"{len(twitter_friends)} friends retrieved")
 
         follower_counts = {}
         for friend in twitter_friends:
@@ -277,11 +283,14 @@ def main():
     log_filename = str(master_start.replace(microsecond=0))
     logging.basicConfig(
         filename = f"log/{log_filename}.log",
-        level = logging.DEBUG,
-        format = "%(levelname)s  %(name)s  %(asctime)s:  %(message)s"
+        level = logging.INFO,
+        format = "%(levelname)s  %(asctime)s  %(name)s  %(message)s"
     )
-    logging.getLogger("requests").setLevel(logging.INFO)
-    logging.getLogger("urllib3").setLevel(logging.INFO)
+    # logging.getLogger("requests").setLevel(logging.INFO)
+    # logging.getLogger("urllib3").setLevel(logging.INFO)
+    # logging.getLogger("tweepy").setLevel(logging.INFO)
+    # logging.getLogger("oathlib").setLevel(logging.INFO)
+    # logging.getLogger("requests_oauthlib").setLevel(logging.INFO)
 
     hours_1 = timedelta(hours=1)
     days_1 = timedelta(days=1)
