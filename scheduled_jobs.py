@@ -4,6 +4,7 @@ import pytz
 from apscheduler.schedulers.blocking import BlockingScheduler
 import traceback
 import logging
+from copy import deepcopy
 import pickler
 from imladris import db, cmc_api, nom_api, twit_api, twilio_api, Config
 from imladris.evaluators import E3434
@@ -16,16 +17,12 @@ from imladris.utilities import datetime_from_rfc3339
 
 def prep_intervals_for_eval(intervals, evaluators):
 
-    logging.info("preping intervals for eval")
-
     eval_scores_dict = dict(zip([e.name for e in evaluators], [None] * len(evaluators)))
     eval_intervals_scores_dict = dict(zip([e.name for e in evaluators], [[] for e in evaluators]))
 
-    def get_default_crypto_mapping(id):
+    def default_crypto_mapping(id):
         crypto = {
             "crypto_id": id,
-            "interval_start": None,
-            "interval_end": None,
             "interval_data": {
                 "interval_id": [],
                 "price": [],
@@ -36,24 +33,25 @@ def prep_intervals_for_eval(intervals, evaluators):
                 "timestamp": []
             }
         }
-        crypto.update(eval_scores_dict)
-        crypto["interval_data"].update(eval_intervals_scores_dict)
+        crypto.update(deepcopy(eval_scores_dict))
+        crypto["interval_data"].update(deepcopy(eval_intervals_scores_dict))
         return crypto
 
-    mapped_intervals = {}
+    mapped_cryptos = {}
+
     for interval in intervals:
+
         crypto_id = interval["crypto_id"]
-        if crypto_id not in mapped_intervals:
-            mapped_intervals[crypto_id] = get_default_crypto_mapping(crypto_id)
-        interval_data = mapped_intervals[crypto_id]["interval_data"]
+
+        if crypto_id not in mapped_cryptos:
+            mapped_cryptos[crypto_id] = default_crypto_mapping(crypto_id)
+
+        interval_data = mapped_cryptos[crypto_id]["interval_data"]
+
         for key in interval_data:
             interval_data[key].append(interval[key])
 
-    for crypto in mapped_intervals.values():
-        crypto["interval_start"] = crypto["interval_data"]["timestamp"][0]
-        crypto["interval_end"] = crypto["interval_data"]["timestamp"][-1]
-
-    return mapped_intervals
+    return mapped_cryptos
 
 
 
@@ -156,17 +154,30 @@ def evaluate_cryptos():
         max_interval_count = max([e.get_intervals_needed() for e in evaluators])
 
         end_interval_count = db.get_int_value("interval_count") - 1
-        start_interval_count = end_interval_count - max_interval_count
+        start_interval_count = end_interval_count - max_interval_count + 1
+
+        logging.info(f"retrieving intervals with interval_count from {start_interval_count} to {end_interval_count}")
 
         intervals = db.get_intervals(start_interval_count, end_interval_count)
 
-        cryptos = prep_intervals_for_eval(intervals, evaluators)
+        logging.info(f"{len(intervals)} intervals retrieved, Preparing intervals for evaluation")
+
+        mapped_cryptos = prep_intervals_for_eval(intervals, evaluators)
+        cryptos = {
+            "start_interval_count": start_interval_count,
+            "end_interval_count": end_interval_count,
+            "cryptos": mapped_cryptos.values()
+        }
+
+        logging.info("cryptos prepared. Evaluating cryptos")
 
         for evaluator in evaluators:
             evaluator.evaluate(cryptos)
 
+        logging.info("evaluation complete")
+
         interval_scores = []
-        for crypto in cryptos.values():
+        for crypto in cryptos["cryptos"]:
             interval_id = crypto["interval_data"]["interval_id"][-1]
             scores = [crypto[name] for name in evaluator_names]
             evaluator_scores = dict(zip(evaluator_names, scores))
@@ -174,7 +185,7 @@ def evaluate_cryptos():
 
         db.update_interval_scores(interval_scores)
 
-        logging.info(f"{len(cryptos)} evaluated using evaluators: {', '.join(evaluator_names)}.")
+        logging.info(f"Database updated. {len(cryptos)} evaluated using evaluators: {', '.join(evaluator_names)}.")
 
     except:
         tb = traceback.format_exc()

@@ -86,7 +86,7 @@ OR
     def get_intervals(self, start_interval_count, end_interval_count):
         query = '''
 SELECT * FROM Interval_1hr
-WHERE interval_count >= (%s) AND interval_count <= (%s)
+WHERE interval_count >= (%s) AND interval_count <= (%s) AND (crypto_id = 29 OR crypto_id = 2467 OR crypto_id = 4124)
 ORDER BY interval_count DESC;'''
         with self.open_connection() as con:
             cur = con.cursor(dictionary=True)
