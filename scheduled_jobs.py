@@ -178,7 +178,7 @@ def evaluate_cryptos():
 
         interval_scores = []
         for crypto in cryptos["cryptos"]:
-            interval_id = crypto["interval_data"]["interval_id"][-1]
+            interval_id = crypto["interval_data"]["interval_id"][0]
             scores = [crypto[name] for name in evaluator_names]
             evaluator_scores = dict(zip(evaluator_names, scores))
             interval_scores.append((interval_id, evaluator_scores))
