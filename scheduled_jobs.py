@@ -275,8 +275,9 @@ def update_all_cryptos():
 
 def run_hourly_jobs():
     Config.load("imladris_config.json")
-    utcnow = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
-    success = add_crypto_intervals(utcnow)
+    if Config.RUN_ADD_CRYPTO_INTERVALS:
+        utcnow = datetime.utcnow().replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
+        success = add_crypto_intervals(utcnow)
     if success and Config.RUN_EVALUATION:
         evaluate_cryptos()
 
