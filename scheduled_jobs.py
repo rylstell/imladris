@@ -205,13 +205,20 @@ def add_new_cryptos():
     try:
 
         api_cmc_ids = [crypto["id"] for crypto in cmc_api.mapping()]
+
+        logging.info(f"{len(api_cmc_id)} cmc ids retrieved")
+
         db_cmc_ids = db.get_cryptos(fields=["cmc_id"])
 
         new_ids = list(set(api_cmc_ids) - set(db_cmc_ids))
 
         new_cmc_meta = cmc_api.metadata(new_ids)
 
+        logging.info(f"{len(cmc_meta)} cmc cryptos retrieved")
+
         nomics_ids = set([crypto["id"] for crypto in nom_api.metadata()])
+
+        logging.info(f"{len(nomics_ids)} nomics ids retrieved")
 
         with_nomics_id = 0
         twitter_following = 0
@@ -317,13 +324,13 @@ def main():
     hours_1 = timedelta(hours=1)
     days_1 = timedelta(days=1)
     days_7 = timedelta(days=7)
-    mins_2 = timedelta(minutes=2)
     mins_5 = timedelta(minutes=5)
+    mins_10 = timedelta(minutes=10)
 
     base_start = master_start.replace(tzinfo=pytz.utc, minute=0, second=0, microsecond=0)
     hourly_jobs_start = base_start + hours_1
-    daily_jobs_start = base_start + days_1 - mins_2
-    weekly_jobs_start = base_start + days_7 - mins_5
+    daily_jobs_start = base_start + days_1 - mins_5
+    weekly_jobs_start = base_start + days_7 - mins_10
 
     logging.info(f"beginning scheduled jobs. hourly_jobs_start={hourly_jobs_start}, daily_jobs_start={daily_jobs_start}, weekly_jobs_start{weekly_jobs_start}")
 
