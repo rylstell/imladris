@@ -71,6 +71,8 @@ def add_crypto_intervals(start_datetime):
         intervals_missed = round((start_datetime - previous_datetime).seconds / 3600) - 1
         interval_count += intervals_missed
 
+        logging.info(f"{intervals_missed} itervals missed")
+
         tickers = nom_api.tickers(interval="1h")
 
         if tickers is None:
@@ -134,7 +136,6 @@ def add_crypto_intervals(start_datetime):
         return True
 
     except:
-        db.update_int_value("interval_count", interval_count + 1)
         tb = traceback.format_exc()
         logging.warning(f"error when adding crypto intervals.\n{tb}")
         twilio_api.send_text_to_admin("error in add_crypto_intervals")
