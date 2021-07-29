@@ -66,7 +66,7 @@ def add_crypto_intervals(start_datetime):
     try:
 
         interval_count = db.get_int_value("interval_count")
-        previous_datetime = datetime.fromtimestamp(db.get_int_value("previous_interval_datetime"))
+        previous_datetime = datetime.fromtimestamp(db.get_int_value("previous_interval_datetime"), pytz.utc)
 
         intervals_missed = round((start_datetime - previous_datetime).seconds / 3600) - 1
         interval_count += intervals_missed
