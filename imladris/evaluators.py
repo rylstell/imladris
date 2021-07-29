@@ -1,5 +1,5 @@
 from imladris.utilities import segment_list
-
+import traceback
 
 
 class Evaluator:
@@ -50,6 +50,8 @@ class E3434(Evaluator):
         for i in range(self.num_chunks-1):
             chunk = next(chunks)
             prev_avg = sum(chunk) / len(chunk)
+            if prev_avg == 0:
+                raise
             change = (cur_avg - prev_avg) / prev_avg
             weight = 1 / (i + 1)
             tot += weight * change
@@ -63,12 +65,17 @@ class E3434(Evaluator):
         max_intervals = self.get_intervals_needed()
         total_intervals = max_intervals - self.max_missing_allowed
         for crypto in cryptos["cryptos"]:
-            valid_intervals = self.__validate_intervals(crypto["interval_data"]["interval_count"], current_interval_count, max_intervals)
-            field_tot = 0
-            for field in self.fields:
-                chunk_tot = 0
-                for chunk_size in self.chunk_sizes:
-                    nums = crypto["interval_data"][field][:total_intervals]
-                    chunk_tot += self.__evaluate_field(nums, chunk_size)
-                field_tot += chunk_tot / len(self.chunk_sizes)
-            crypto[self.name] = field_tot / len(self.fields)
+            try:
+                valid_intervals = self.__validate_intervals(crypto["interval_data"]["interval_count"], current_interval_count, max_intervals)
+                if not valid_intervals: raise
+                field_tot = 0
+                for field in self.fields:
+                    chunk_tot = 0
+                    for chunk_size in self.chunk_sizes:
+                        nums = crypto["interval_data"][field][:total_intervals]
+                        chunk_tot += self.__evaluate_field(nums, chunk_size)
+
+                    field_tot += chunk_tot / len(self.chunk_sizes)
+                crypto[self.name] = field_tot / len(self.fields)
+            except:
+                crypto[self.name] = None

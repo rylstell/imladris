@@ -66,6 +66,10 @@ def add_crypto_intervals(start_datetime):
     try:
 
         interval_count = db.get_int_value("interval_count")
+        previous_datetime = datetime.fromtimestamp(db.get_int_value("previous_interval_datetime"))
+
+        intervals_missed = round((start_datetime - previous_datetime).seconds / 3600) - 1
+        interval_count += intervals_missed
 
         tickers = nom_api.tickers(interval="1h")
 
@@ -123,6 +127,7 @@ def add_crypto_intervals(start_datetime):
 
         db.add_intervals(intervals)
         db.update_int_value("interval_count", interval_count + 1)
+        db.update_int_value("previous_interval_datetime", int(start_datetime.timestamp()))
 
         logging.info(f"{len(intervals)} intervals added. interval count is {interval_count}.")
 
@@ -206,7 +211,7 @@ def add_new_cryptos():
 
         api_cmc_ids = [crypto["id"] for crypto in cmc_api.mapping()]
 
-        logging.info(f"{len(api_cmc_id)} cmc ids retrieved")
+        logging.info(f"{len(api_cmc_ids)} cmc ids retrieved")
 
         db_cmc_ids = db.get_cryptos(fields=["cmc_id"])
 
@@ -214,7 +219,7 @@ def add_new_cryptos():
 
         new_cmc_meta = cmc_api.metadata(new_ids)
 
-        logging.info(f"{len(cmc_meta)} cmc cryptos retrieved")
+        logging.info(f"{len(new_cmc_meta)} cmc cryptos retrieved")
 
         nomics_ids = set([crypto["id"] for crypto in nom_api.metadata()])
 
