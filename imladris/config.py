@@ -8,7 +8,6 @@ class ImladrisConfig:
 
     def load(self, config_filename):
 
-        config = None
         with open(config_filename, "r") as config_file:
             config = json.load(config_file)
 

@@ -1,4 +1,4 @@
-from imladris.imladris_config import ImladrisConfig
+from imladris.config import ImladrisConfig
 from imladris.imladrisdb import ImladrisDatabase
 from imladris.cmc import CMCApi
 from imladris.nomics import NomicsApi
