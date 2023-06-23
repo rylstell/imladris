@@ -1,13 +1,5 @@
 from imladris import db, twit_api
-import pickler
-
-
-'''
-
-min_id = 1
-max_id = 959
-
-'''
+from imladris.utilities import save_pickle, load_pickle
 
 
 
@@ -24,7 +16,7 @@ def main():
     # twitter_usernames = [crypto["twitter_username"] for crypto in cryptos]
     # users = twit_api.get_users(twitter_usernames)
 
-    cryptos, users = pickler.load("cryptos_users.pickle")
+    cryptos, users = load_pickle("cryptos_users.pickle")
 
     cryptoids_usernames = [(c["crypto_id"], c["twitter_username"].lower()) for c in cryptos]
 
@@ -32,11 +24,11 @@ def main():
     for user in users:
         if user.following:
             sn_lower = user.screen_name.lower()
-            for id, username in cryptoids_usernames:
+            for crypto_id, username in cryptoids_usernames:
                 if sn_lower == username:
-                    friends_cryptos_ids.append(id)
+                    friends_cryptos_ids.append(crypto_id)
 
-    # pickler.dump(friends_cryptos_ids, "friends_cryptos_ids.pickle")
+    # save_pickle(friends_cryptos_ids, "friends_cryptos_ids.pickle")
 
     # with db.open_connection() as con:
     #     query = "UPDATE Crypto SET twitter_following = (%s) WHERE crypto_id = (%s)"

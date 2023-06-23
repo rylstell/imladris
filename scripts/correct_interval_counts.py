@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 from imladris import db
-import pickler
+from imladris.utilities import save_pickle
 
 
 def main():
@@ -55,7 +55,7 @@ def main():
         else:
             ci += 1
 
-    pickler.dump(corrections, "corrections.pickle")
+    save_pickle(corrections, "corrections.pickle")
 
 
     print("updating interval_count")

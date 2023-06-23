@@ -1,9 +1,22 @@
 from datetime import datetime
 import pytz
+import pickle
+
+
+def save_pickle(data, filename):
+    with open(filename, "wb") as f:
+        pickle.dump(data, f)
+
+
+def load_pickle(filename):
+    with open(filename, "rb") as f:
+        return pickle.load(f)
+
 
 def segment_list(lst, size):
     for i in range(0, len(lst), size):
         yield lst[i:i+size]
+
 
 def datetime_from_rfc3339(rfc3339):
     try:

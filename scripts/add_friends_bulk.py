@@ -1,16 +1,9 @@
 from imladris import db, twit_api
+from imladris.utilities import save_pickle, load_pickle
 import traceback
 import sys
 import time
 from datetime import datetime
-import pickler
-
-
-
-
-# last friendship crypto_id: 5542
-# start time: 2021-07-02 19:01:15.908966
-# end time:   2021-07-02 19:23:46.556313
 
 
 
@@ -52,7 +45,7 @@ def main():
     print("end time:", str(datetime.now()))
     print(f"# {friendship_count} friendships created")
 
-    pickler.dump(friends_cryptos_ids, "friends_cryptos_ids_3.pickle")
+    save_pickle(friends_cryptos_ids, "friends_cryptos_ids_3.pickle")
 
     with db.open_connection() as con:
         query = "UPDATE Crypto SET twitter_following = (%s) WHERE crypto_id = (%s)"
@@ -64,8 +57,6 @@ def main():
 
     print("imladrisdb updated")
     print("done")
-
-
 
 
 

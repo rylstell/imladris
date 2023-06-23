@@ -5,13 +5,9 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 import traceback
 import logging
 from copy import deepcopy
-import pickler
 from imladris import db, cmc_api, nom_api, twit_api, twilio_api, Config
 from imladris.evaluators import E3434
 from imladris.utilities import datetime_from_rfc3339
-
-
-
 
 
 
@@ -55,10 +51,6 @@ def prep_intervals_for_eval(intervals, evaluators):
 
 
 
-
-
-
-
 def add_crypto_intervals(start_datetime):
 
     logging.info("adding crypto intervals")
@@ -69,7 +61,10 @@ def add_crypto_intervals(start_datetime):
     intervals_missed = round((start_datetime - previous_datetime).seconds / 3600) - 1
     interval_count += intervals_missed
 
-    logging.info(f"{intervals_missed} itervals missed")
+    if intervals_missed:
+        logging.warning(f"{intervals_missed} itervals missed")
+    else:
+        logging.info(f"{intervals_missed} itervals missed")
 
     tickers = nom_api.tickers(interval="1h")
 
@@ -133,13 +128,6 @@ def add_crypto_intervals(start_datetime):
 
 
 
-
-
-
-
-
-
-
 def evaluate_cryptos():
 
     logging.info("evaluating cryptos")
@@ -182,10 +170,6 @@ def evaluate_cryptos():
     db.update_interval_scores(interval_scores)
 
     logging.info(f"Database updated. {len(cryptos)} evaluated using evaluators: {', '.join(evaluator_names)}.")
-
-
-
-
 
 
 
@@ -240,10 +224,6 @@ def add_new_cryptos():
 
 
 
-
-
-
-
 #twitter friendship isn't updated if twitter_username changes
 def update_all_cryptos():
     logging.info("updating all cryptos")
@@ -251,12 +231,6 @@ def update_all_cryptos():
     cmc_meta = cmc_api.metadata(cmc_ids)
     db.update_cmc_cryptos(cmc_meta)
     logging.info("cryptos updated")
-
-
-
-
-
-
 
 
 
@@ -313,9 +287,6 @@ def run_weekly_jobs():
 
 
 
-
-
-
 def main():
 
     master_start = datetime.utcnow()
@@ -350,8 +321,6 @@ def main():
     except:
         tb = traceback.format_exc()
         logging.warning(f"error with scheduler?\n{tb}")
-
-
 
 
 

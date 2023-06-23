@@ -28,4 +28,4 @@ twilio_api = TwilioApi(
     Config.TWILIO_ACCOUNT_SID,
     Config.TWILIO_AUTH_TOKEN,
     Config.TWILIO_PHONE_NUMBER,
-    Config.SQUOG_PHONE_NUMBER)
+    Config.ADMIN_PHONE_NUMBER)

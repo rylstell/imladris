@@ -20,7 +20,7 @@ class ImladrisConfig:
         self.TWILIO_ACCOUNT_SID = config.get("TWILIO_ACCOUNT_SID")
         self.TWILIO_AUTH_TOKEN = config.get("TWILIO_AUTH_TOKEN")
         self.TWILIO_PHONE_NUMBER = config.get("TWILIO_PHONE_NUMBER")
-        self.SQUOG_PHONE_NUMBER = config.get("SQUOG_PHONE_NUMBER")
+        self.ADMIN_PHONE_NUMBER = config.get("ADMIN_PHONE_NUMBER")
         self.DATABASE_HOST = config.get("DATABASE_HOST")
         self.DATABASE_USER = config.get("DATABASE_USER")
         self.DATABASE_PASS = config.get("DATABASE_PASS")

@@ -19,8 +19,8 @@ def main():
     with db.open_connection() as con:
         query = "UPDATE Crypto SET test_crypto = 1 WHERE crypto_id = (%s);"
         cur = con.cursor()
-        for id in crypto_ids:
-            cur.execute(query, (id,))
+        for crypto_id in crypto_ids:
+            cur.execute(query, (crypto_id,))
         con.commit()
         cur.close()
 
